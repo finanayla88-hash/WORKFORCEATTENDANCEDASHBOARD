@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<title>Workforce Attendance Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#10243e;--navy:#17365d;--bg:#f2f4f7;--card:#fff;--line:#dde2ea;--text:#1d2a3a;--muted:#5d6b7e;--hadir:#1f7a5c;--izin:#c98a1b;--sakit:#5b63b7;--alfa:#c2413b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "IBM Plex Sans",Segoe UI,Arial,sans-serif;font-variant-numeric:tabular-nums}
+.top{background:var(--ink);color:#fff}.top .in{max-width:1240px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mark{width:34px;height:34px;border-radius:6px;background:#fff;display:grid;place-items:center}.mark svg{width:20px;height:20px}
+.brand h1{margin:0;font-size:17px;font-weight:600;letter-spacing:.1px}.brand p{margin:0;font-size:12px;color:#9fb3cc}
+.clock{margin-left:auto;text-align:right;line-height:1.25}.clock b{display:block;font-size:20px;font-weight:600}.clock span{font-size:12px;color:#9fb3cc}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;margin-right:8px;animation:pulse 2s infinite}@keyframes pulse{50%{opacity:.35}}
+.wrap{max-width:1240px;margin:0 auto;padding:22px 28px 40px}
+.filters{display:flex;gap:14px;flex-wrap:wrap;align-items:end;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:18px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:170px}.field label{font-size:12px;color:var(--muted);font-weight:500}
+input,select{height:36px;border:1px solid #c5cdd9;border-radius:5px;padding:0 10px;font:inherit;background:#fff;color:var(--text)}
+button{font:inherit}#sheetBtn{height:36px;border:0;border-radius:5px;padding:0 14px;background:var(--navy);color:#fff;font-weight:600;cursor:pointer}#sheetBtn:hover{background:var(--ink)}
+:focus-visible{outline:2px solid #2f6fd0;outline-offset:2px}
+.hint{width:100%;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:9px}
+.hero{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:0;background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:18px;overflow:hidden}
+.rate{padding:24px 26px;background:var(--navy);color:#fff}.rate small{font-size:13px;color:#b8c8dd}.rate .big{font-size:60px;font-weight:700;line-height:1.05;margin:6px 0 8px;letter-spacing:-1px}.rate p{margin:0;font-size:12.5px;color:#b8c8dd}
+.comp{padding:24px 26px;display:flex;flex-direction:column;justify-content:center;gap:18px}.comp h2{margin:0;font-size:15px;font-weight:600}
+.stack{display:flex;height:16px;border-radius:3px;overflow:hidden;background:#e6eaf0}.stack i{display:block;height:100%}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.lg b{display:block;font-size:24px;font-weight:600;line-height:1.2}.lg span{font-size:12.5px;color:var(--muted)}.lg span:before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--c);margin-right:6px}
+.meta{display:flex;gap:28px;border-top:1px solid var(--line);padding-top:14px;font-size:12.5px;color:var(--muted)}.meta b{color:var(--text);font-weight:600;font-size:14px;margin-right:4px}
+.grid{display:grid;grid-template-columns:1.15fr 1fr;gap:18px;margin-bottom:18px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px 20px;min-width:0}.panel h2{margin:0;font-size:15px;font-weight:600}.panel .d{font-size:12.5px;color:var(--muted);margin:2px 0 14px}
+svg{display:block;width:100%;height:auto}.empty{color:var(--muted);padding:24px 0}
+.drow{display:grid;grid-template-columns:110px 1fr 46px;gap:12px;align-items:center;margin-bottom:13px}.drow .n{font-weight:500}.drow .p{text-align:right;font-weight:600}
+.tp{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px 20px}.th{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.scroll{overflow:auto;max-height:520px;border:1px solid var(--line);border-radius:5px}table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}th{position:sticky;top:0;background:#f6f8fa;font-weight:600;font-size:12.5px;color:var(--muted)}tr:last-child td{border-bottom:0}
+.chip{display:inline-flex;align-items:center;gap:6px;font-weight:500}.chip:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.foot{text-align:center;font-size:12px;color:var(--muted);margin-top:20px}
+@media(max-width:900px){.hero,.grid{grid-template-columns:1fr}.legend{grid-template-columns:repeat(2,1fr)}.clock{margin-left:0;text-align:left;width:100%}}
+@media(max-width:480px){.wrap{padding:14px}.top .in{padding:12px 14px}.rate .big{font-size:48px}.drow{grid-template-columns:84px 1fr 40px}}
+@media(prefers-reduced-motion:reduce){.live{animation:none}}
+</style></head><body>
+<header class="top"><div class="in"><div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#10243e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+<div class="brand"><h1>Workforce Attendance Dashboard</h1><p>Laporan kehadiran karyawan per divisi dan periode</p></div>
+<div class="clock"><b><span class="live"></span><span id="clockTime" style="font-size:20px;color:#fff;font-weight:600">--:--:--</span></b><span id="clockDate"></span></div></div></header>
+<main class="wrap">
+<section class="filters" aria-label="Filter dan sumber data">
+<div class="field"><label for="period">Periode</label><input id="period" type="month" value="2026-11"></div>
+<div class="field"><label for="division">Divisi</label><select id="division"><option value="Semua Divisi">Semua Divisi</option></select></div>
+<div class="field"><label for="employee">Karyawan</label><select id="employee"><option value="">Semua Karyawan</option></select></div>
+<div class="field" style="min-width:280px;flex:1"><label for="sheetLink">Link Google Sheets</label><div style="display:flex;gap:8px"><input id="sheetLink" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1;min-width:0"><button id="sheetBtn" type="button">Sambungkan</button></div></div>
+<div class="field"><label for="upload">Atau pilih file Excel</label><input id="upload" type="file" accept=".xlsx,.xls,.csv"></div>
+<div class="hint" id="status">Memuat data...</div></section>
+<section class="hero" id="hero"></section>
+<section class="grid"><article class="panel"><h2 id="trendTitle">Tren kehadiran harian</h2><div class="d" id="trendDesc">Persentase karyawan hadir pada setiap tanggal</div><div id="trend"></div></article>
+<article class="panel"><h2>Kehadiran per divisi</h2><div class="d">Komposisi status dan persentase hadir tiap divisi</div><div id="divChart"></div></article></section>
+<section class="tp" style="margin-bottom:18px"><h2 style="margin:0;font-size:15px;font-weight:600">Kehadiran per karyawan</h2><div class="d" style="font-size:12.5px;color:var(--muted);margin:2px 0 12px">Klik nama karyawan untuk melihat riwayat hariannya. Klik lagi untuk kembali ke semua karyawan.</div><div id="perEmp"></div></section>
+<section class="tp"><div class="th"><div><h2 style="margin:0;font-size:15px;font-weight:600">Detail kehadiran</h2><div id="rowInfo" style="font-size:12.5px;color:var(--muted)"></div></div><div class="field"><label for="search">Cari nama, ID, atau status</label><input id="search" type="search" placeholder="Contoh: Andi atau Sakit"></div></div><div id="detailTable"></div></section>
+<div class="foot">Data dibaca langsung dari Google Sheets atau file dasborad.xlsx dan diperbarui otomatis</div>
+</main>
+<script>
+const DATA_FILE='dasborad.xlsx'; // nama file Excel di repo GitHub (satu folder dengan index.html)
+const SHEET_URL=''; // isi link Google Sheets di sini (atau tempel lewat kolom di halaman); kosong = pakai dasborad.xlsx
+const REFRESH_SECONDS=30; // data Excel dicek ulang tiap 30 detik
+let manualFile=false, lastUpdate=null, sourceLabel='file Excel';
+const linkEl=document.getElementById('sheetLink');
+function getSheetId(u){const m=String(u||'').match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);return m&&!/^e$/.test(m[1])?m[1]:''}
+function activeLink(){let l='';try{l=localStorage.getItem('sheetLink')||''}catch(e){}return l||SHEET_URL}
+const SHEET_ABSENSI='Absensi', SHEET_KARYAWAN='Data Karyawan';
+let DB={records:[],employees:[]};
+const colors={Hadir:'#1f7a5c',Izin:'#c98a1b',Sakit:'#5b63b7',Alfa:'#c2413b'};
+const sel=document.getElementById('division'),periodEl=document.getElementById('period'),statusEl=document.getElementById('status');
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toISO(v){
+ if(v instanceof Date)return v.toISOString().slice(0,10);
+ if(typeof v==='number')return new Date(Math.round((v-25569)*86400000)).toISOString().slice(0,10);
+ const t=String(v||'').trim(); const m=t.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m)return m[0];
+ const d=t.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/); if(d)return d[3]+'-'+d[2].padStart(2,'0')+'-'+d[1].padStart(2,'0');
+ return t;
+}
+function loadWorkbook(wb){
+ const rowsOf=n=>wb.Sheets[n]?XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''}):[];
+ applyData(rowsOf(SHEET_ABSENSI),rowsOf(SHEET_KARYAWAN));
+}
+async function sheetRows(id,name){
+ const url='https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:json&headers=1&sheet='+encodeURIComponent(name)+'&_='+Date.now();
+ const res=await fetch(url);
+ if(!res.ok)throw new Error('HTTP '+res.status);
+ const txt=await res.text();
+ const m=txt.match(/setResponse\(([\s\S]*)\);?\s*$/);
+ if(!m)throw new Error('Sheet tidak bisa dibaca (pastikan akses "Siapa saja yang memiliki link: Pelihat")');
+ const j=JSON.parse(m[1]);
+ if(j.status==='error')throw new Error((j.errors&&j.errors[0]&&j.errors[0].detailed_message)||'Sheet "'+name+'" tidak ditemukan');
+ const cols=j.table.cols.map(c=>c.label||c.id);
+ return j.table.rows.map(r=>{const o={};cols.forEach((c,i)=>{let cell=r.c[i],v=cell&&cell.v!=null?cell.v:'';
+  if(typeof v==='string'){const d=v.match(/^Date\((\d+),(\d+),(\d+)/);if(d)v=d[1]+'-'+String(+d[2]+1).padStart(2,'0')+'-'+d[3].padStart(2,'0')}
+  o[c]=v});return o});
+}
+async function loadFromSheet(id){
+ const [abs,emp]=await Promise.all([sheetRows(id,SHEET_ABSENSI),sheetRows(id,SHEET_KARYAWAN).catch(()=>[])]);
+ sourceLabel='Google Sheets';applyData(abs,emp);
+}
+function applyData(abs,emp){
+ if(!abs.length)throw new Error('Sheet "'+SHEET_ABSENSI+'" tidak ditemukan atau kosong');
+ DB.records=abs.filter(r=>r['Tanggal']!==''&&r['Status']!=='').map(r=>({date:toISO(r['Tanggal']),id:String(r['ID Karyawan']).trim(),name:String(r['Nama Karyawan']).trim(),division:String(r['Divisi']).trim(),status:String(r['Status']).trim(),note:String(r['Keterangan']||'').trim()}));
+ DB.employees=emp.filter(r=>r['ID Karyawan']!=='').map(r=>({id:String(r['ID Karyawan']).trim(),name:String(r['Nama Karyawan']).trim(),division:String(r['Divisi']).trim(),position:String(r['Jabatan']||'').trim()}));
+ if(!DB.employees.length){const seen={};DB.records.forEach(r=>{if(!seen[r.id]){seen[r.id]=1;DB.employees.push({id:r.id,name:r.name,division:r.division})}})}
+ const cur=sel.value;
+ sel.innerHTML='<option value="Semua Divisi">Semua Divisi</option>';
+ [...new Set(DB.employees.map(x=>x.division))].forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o)});
+ if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+ const months=[...new Set(DB.records.map(r=>r.date.slice(0,7)))].sort();
+ if(months.length&&!months.includes(periodEl.value))periodEl.value=months[months.length-1];
+ lastUpdate=new Date();showStatus();
+ render();
+}
+function showStatus(){
+ if(!lastUpdate)return;
+ statusEl.textContent=sourceLabel+': '+DB.records.length+' catatan, '+DB.employees.length+' karyawan • diperbarui '+lastUpdate.toLocaleTimeString('id-ID',{timeZone:'Asia/Jakarta'})+' WIB'+(manualFile?' (file manual)':' • auto-refresh '+REFRESH_SECONDS+' dtk');
+}
+function tickClock(){
+ const n=new Date();
+ document.getElementById('clockTime').textContent=n.toLocaleTimeString('id-ID',{timeZone:'Asia/Jakarta',hour12:false}).replace(/\./g,':')+' WIB';
+ document.getElementById('clockDate').textContent=n.toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta',weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+tickClock();setInterval(tickClock,1000);
+async function loadFromRepo(){
+ try{
+  const sid=getSheetId(activeLink());
+  if(sid){await loadFromSheet(sid);return}
+  sourceLabel='file Excel';
+  const res=await fetch(DATA_FILE+'?t='+Date.now());
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  loadWorkbook(XLSX.read(await res.arrayBuffer(),{type:'array'}));
+ }catch(e){
+  if(getSheetId(activeLink())){statusEl.textContent=(DB.records.length?'Gagal memperbarui, menampilkan data terakhir. ':'')+'Google Sheets: '+e.message;if(!DB.records.length)render();return}
+  if(DB.records.length){statusEl.textContent='Gagal memperbarui ('+e.message+'), menampilkan data terakhir.';return}
+  statusEl.textContent='Gagal memuat '+DATA_FILE+' ('+e.message+'). Pilih file Excel secara manual di kolom "Ganti data".';
+  render();
+ }
+}
+linkEl.value=activeLink();
+document.getElementById('sheetBtn').addEventListener('click',()=>{
+ const v=linkEl.value.trim();
+ if(v&&!getSheetId(v)){statusEl.textContent='Link tidak valid. Gunakan link Google Sheets (…/spreadsheets/d/ID/…).';return}
+ try{v?localStorage.setItem('sheetLink',v):localStorage.removeItem('sheetLink')}catch(e){}
+ manualFile=false;statusEl.textContent='Menyambungkan...';loadFromRepo();
+});
+document.getElementById('upload').addEventListener('change',async ev=>{
+ const f=ev.target.files[0];if(!f)return;
+ try{manualFile=true;loadWorkbook(XLSX.read(await f.arrayBuffer(),{type:'array'}))}catch(e){statusEl.textContent='File tidak valid: '+e.message}
+});
+function render(){
+ const ST=['Hadir','Izin','Sakit','Alfa'],month=periodEl.value,div=sel.value,q=document.getElementById('search').value.trim().toLowerCase();
+ const empSel=document.getElementById('employee'),pool=DB.employees.filter(e=>div==='Semua Divisi'||e.division===div),prev=empSel.value,sig=pool.map(e=>e.id+e.name).join('|');
+ if(empSel._sig!==sig){empSel.innerHTML='<option value="">Semua Karyawan</option>'+pool.map(e=>`<option value="${esc(e.id)}">${esc(e.name)}</option>`).join('');empSel._sig=sig}
+ const eid=pool.some(e=>e.id===prev)?prev:'';empSel.value=eid;
+ const inScope=DB.records.filter(r=>(!month||r.date.startsWith(month))&&(div==='Semua Divisi'||r.division===div));
+ const rows=eid?inScope.filter(r=>r.id===eid):inScope,staff=eid?pool.filter(e=>e.id===eid):pool,person=eid?pool.find(e=>e.id===eid):null;
+ const cnt=()=>({Hadir:0,Izin:0,Sakit:0,Alfa:0}),counts=cnt();rows.forEach(r=>{if(r.status in counts)counts[r.status]++});
+ const total=ST.reduce((a,s)=>a+counts[s],0),pct=total?counts.Hadir/total*100:0;
+ const mLabel=month?new Date(month+'-01T00:00:00').toLocaleDateString('id-ID',{month:'long',year:'numeric'}):'Semua periode';
+ document.getElementById('hero').innerHTML=`<div class="rate"><small>Tingkat kehadiran</small><div class="big">${total?pct.toFixed(1).replace('.',',')+'%':'-'}</div><p>${esc(mLabel)}, ${esc(person?person.name:div)}</p></div>
+ <div class="comp"><h2>Komposisi status kehadiran</h2><div class="stack" role="img" aria-label="Komposisi status">${ST.map(s=>total?`<i style="width:${counts[s]/total*100}%;background:${colors[s]}"></i>`:'').join('')}</div>
+ <div class="legend">${ST.map(s=>`<div class="lg" style="--c:${colors[s]}"><b>${counts[s]}</b><span>${s}${total?' ('+Math.round(counts[s]/total*100)+'%)':''}</span></div>`).join('')}</div>
+ <div class="meta"><span><b>${staff.length}</b>karyawan</span><span><b>${total}</b>catatan kehadiran</span></div></div>`;
+ // tren harian
+ const byD={};rows.forEach(r=>{(byD[r.date]=byD[r.date]||cnt());if(r.status in byD[r.date])byD[r.date][r.status]++});
+ const ds=Object.keys(byD).sort();
+ document.getElementById('trendTitle').textContent=person?'Riwayat kehadiran '+person.name:'Tren kehadiran harian';
+ document.getElementById('trendDesc').textContent=person?'Status kehadiran pada setiap tanggal':'Persentase karyawan hadir pada setiap tanggal';
+ if(person){document.getElementById('trend').innerHTML=rows.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">${rows.slice().sort((a,b)=>a.date<b.date?-1:1).map(r=>`<div title="${esc(r.date)}: ${esc(r.status)}" style="width:46px;border-radius:5px;background:${colors[r.status]||'#999'};color:#fff;text-align:center;padding:6px 0;font-size:12px"><b style="display:block;font-size:15px">${+r.date.slice(8)}</b>${esc(r.status)}</div>`).join('')}</div>`:'<div class="empty">Belum ada catatan untuk karyawan ini pada periode ini.</div>'}
+ else if(!ds.length){document.getElementById('trend').innerHTML='<div class="empty">Belum ada data untuk filter ini.</div>'}else{
+  const W=640,H=250,L=40,R=14,T=12,B=30,pw=W-L-R,ph=H-T-B,X=i=>L+(ds.length>1?pw*i/(ds.length-1):pw/2);
+  const P=ds.map(d=>{const t=ST.reduce((a,s)=>a+byD[d][s],0);return t?byD[d].Hadir/t*100:0}),Y=v=>T+ph-ph*v/100;
+  let g='';[0,25,50,75,100].forEach(v=>{g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e6eaf0"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#5d6b7e">${v}%</text>`});
+  const step=Math.ceil(ds.length/12);ds.forEach((d,i)=>{if(i%step===0)g+=`<text x="${X(i)}" y="${H-9}" text-anchor="middle" font-size="11" fill="#5d6b7e">${+d.slice(8)}</text>`});
+  const pts=P.map((v,i)=>`${X(i)},${Y(v)}`).join(' ');
+  document.getElementById('trend').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Tren persentase hadir harian">${g}<polyline points="${pts}" fill="none" stroke="#17365d" stroke-width="2.2" stroke-linejoin="round"/>${P.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="3.4" fill="#17365d"><title>${ds[i]}: ${v.toFixed(0)}% hadir</title></circle>`).join('')}</svg>`}
+ // per karyawan
+ const eh=pool.map(e=>{const c=cnt();inScope.filter(r=>r.id===e.id).forEach(r=>{if(r.status in c)c[r.status]++});const t=ST.reduce((a,x)=>a+c[x],0);return{e,c,t,p:t?Math.round(c.Hadir/t*100):null}}).sort((a,b)=>a.e.name.localeCompare(b.e.name));
+ document.getElementById('perEmp').innerHTML=eh.length?`<div class="scroll"><table><thead><tr><th>Nama</th><th>Divisi</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alfa</th><th>Persentase hadir</th></tr></thead><tbody>${eh.map(x=>`<tr data-id="${esc(x.e.id)}" tabindex="0" style="cursor:pointer;${x.e.id===eid?'background:#e8f0fb;font-weight:600':''}"><td>${esc(x.e.name)}<div style="font-size:11.5px;color:var(--muted);font-weight:400">${esc(x.e.id)}</div></td><td>${esc(x.e.division)}</td><td>${x.c.Hadir}</td><td>${x.c.Izin}</td><td>${x.c.Sakit}</td><td>${x.c.Alfa}</td><td><div style="display:flex;align-items:center;gap:8px"><div style="width:90px;height:8px;background:#e6eaf0;border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:${x.p||0}%;background:var(--hadir)"></i></div><b>${x.p===null?'-':x.p+'%'}</b></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Belum ada data karyawan.</div>';
+ // per divisi
+ const dv=[...new Set(DB.employees.map(x=>x.division))].filter(d=>person?d===person.division:(div==='Semua Divisi'||d===div));
+ const dh=dv.map(d=>{const c=cnt();rows.filter(r=>r.division===d).forEach(r=>{if(r.status in c)c[r.status]++});const t=ST.reduce((a,s)=>a+c[s],0);
+  return `<div class="drow"><div class="n">${esc(d)}</div><div class="stack" title="${ST.map(s=>s+' '+c[s]).join(', ')}">${ST.map(s=>t?`<i style="width:${c[s]/t*100}%;background:${colors[s]}"></i>`:'').join('')}</div><div class="p">${t?Math.round(c.Hadir/t*100)+'%':'-'}</div></div>`}).join('');
+ document.getElementById('divChart').innerHTML=(dh||'<div class="empty">Belum ada data untuk filter ini.</div>')+(dh?`<div class="legend" style="margin-top:16px;grid-template-columns:repeat(4,auto);justify-content:start;gap:16px">${ST.map(s=>`<div class="lg" style="--c:${colors[s]}"><span>${s}</span></div>`).join('')}</div>`:'');
+ // tabel
+ const f=rows.filter(r=>!q||[r.name,r.id,r.division,r.status,r.note].join(' ').toLowerCase().includes(q)),LIM=100;
+ document.getElementById('rowInfo').textContent=f.length?`Menampilkan ${Math.min(f.length,LIM)} dari ${f.length} catatan`:'';
+ document.getElementById('detailTable').innerHTML=f.length?`<div class="scroll"><table><thead><tr><th>Tanggal</th><th>ID karyawan</th><th>Nama</th><th>Divisi</th><th>Status</th><th>Keterangan</th></tr></thead><tbody>${f.slice(0,LIM).map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.id)}</td><td>${esc(r.name)}</td><td>${esc(r.division)}</td><td><span class="chip" style="--c:${colors[r.status]||'#999'}">${esc(r.status)}</span></td><td>${esc(r.note||'-')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Tidak ada catatan yang cocok. Ubah periode, divisi, atau kata pencarian.</div>';
+}
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('employee').addEventListener('change',render);
+function pickEmp(ev){const tr=ev.target.closest('tr[data-id]');if(!tr)return;const el=document.getElementById('employee');el.value=el.value===tr.dataset.id?'':tr.dataset.id;render();if(el.value)window.scrollTo({top:0,behavior:'smooth'})}
+document.getElementById('perEmp').addEventListener('click',pickEmp);
+document.getElementById('perEmp').addEventListener('keydown',ev=>{if(ev.key==='Enter')pickEmp(ev)});
+periodEl.addEventListener('change',render);sel.addEventListener('change',render);render();loadFromRepo();setInterval(()=>{if(!manualFile&&!document.hidden)loadFromRepo()},REFRESH_SECONDS*1000);
+</script></body></html>
